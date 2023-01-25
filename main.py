@@ -1,16 +1,50 @@
-# This is a sample Python script.
+import requests
+from bs4 import BeautifulSoup
+from imdb import ImdbFilm, ImdbTvShow
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+def get_imdb_soup(media):
+    HEADERS = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0"
+    }
+
+    imdb_api_url = f'https://v2.sg.media-imdb.com/suggestion/h/{media}.json'
+    imdb_response = requests.get(imdb_api_url)
+    imdb_response.raise_for_status()
+    if imdb_response.status_code != 204:
+        json_response = imdb_response.json()
+
+    media_id = json_response['d'][0]['id']
+    media_title = json_response['d'][0]['l']
+    media_year = json_response['d'][0]['y']
+
+    print(f'Getting film : {media_title} - {media_year}')
+
+    url = f'https://www.imdb.com/title/{media_id}/'
+    response = requests.get(url, headers=HEADERS)
+    soup = BeautifulSoup(response.text, 'html.parser')
+
+    return soup
 
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
+def main():
+    media_type_list = ['Film', 'TV', 'Book']
+    media_type = input(f'Input one of: {media_type_list} : ')
+    if media_type not in media_type_list:
+        print('Inputted media type not in media list')
+        exit(0)
+
+    if media_type == 'Film':
+        film = input('What film? ')
+        soup = get_imdb_soup(film)
+        imdb_film = ImdbFilm(soup)
+        print(f'{imdb_film.title} \n {imdb_film.rating} \n {imdb_film.summary} \n {imdb_film.genre_list} \n {imdb_film.runtime} \n {imdb_film.release_date}')
+
+    elif media_type == 'TV':
+        tv = input('What TV show? ')
+        soup = get_imdb_soup(tv)
+        imdb_tv = ImdbTvShow(soup)
+        print(f'{imdb_tv.title} \n {imdb_tv.rating} \n {imdb_tv.summary} \n {imdb_tv.season_number} \n {imdb_tv.episode_number}')
 
 
-# Press the green button in the gutter to run the script.
 if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    main()
