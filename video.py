@@ -1,5 +1,5 @@
 
-class Imdb:
+class Video:
 
     def __init__(self, soup):
         self.title = self._get_title(soup)
@@ -16,7 +16,7 @@ class Imdb:
         return soup.find('div', attrs={'data-testid': 'plot'}).find('span').text
 
 
-class ImdbFilm(Imdb):
+class Film(Video):
 
     def __init__(self, soup):
         super().__init__(soup)
@@ -35,7 +35,7 @@ class ImdbFilm(Imdb):
         return soup.find('ul', attrs={'data-testid': 'hero-title-block__metadata'}).find_all('li')[2].text
 
 
-class ImdbTvShow(Imdb):
+class TvShow(Video):
 
     def __init__(self, soup):
         super().__init__(soup)
