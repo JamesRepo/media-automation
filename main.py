@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
-from imdb import ImdbFilm, ImdbTvShow
+from video import Film, TvShow
+
 
 def get_imdb_soup(media):
     HEADERS = {
@@ -26,6 +27,20 @@ def get_imdb_soup(media):
     return soup
 
 
+def get_goodreads_soup(media):
+    url = f"https://www.goodreads.com/search?q={media}"
+    response = requests.get(url)
+    soup = BeautifulSoup(response.text, 'html.parser')
+    list_item = soup.find('table', {"class": "tableList"}).find_all('tr')[0].find_all('a')[0]
+    url = list_item.get('href')
+    print(url)
+    book_url = \
+        "https://www.goodreads.com/book/show/4671.The_Great_Gatsby?from_search=true&from_srp=true&qid=QuLZvdfJaA&rank=1"
+    book_response = requests.get(book_url)
+    book_soup = BeautifulSoup(book_response.text, 'html.parser')
+    return book_soup
+
+
 def main():
     media_type_list = ['Film', 'TV', 'Book']
     media_type = input(f'Input one of: {media_type_list} : ')
@@ -36,14 +51,18 @@ def main():
     if media_type == 'Film':
         film = input('What film? ')
         soup = get_imdb_soup(film)
-        imdb_film = ImdbFilm(soup)
+        imdb_film = Film(soup)
         print(f'{imdb_film.title} \n {imdb_film.rating} \n {imdb_film.summary} \n {imdb_film.genre_list} \n {imdb_film.runtime} \n {imdb_film.release_date}')
 
     elif media_type == 'TV':
         tv = input('What TV show? ')
         soup = get_imdb_soup(tv)
-        imdb_tv = ImdbTvShow(soup)
+        imdb_tv = TvShow(soup)
         print(f'{imdb_tv.title} \n {imdb_tv.rating} \n {imdb_tv.summary} \n {imdb_tv.season_number} \n {imdb_tv.episode_number}')
+
+    elif media_type == 'Book':
+        book = input('What book? ')
+        get_goodreads_soup(book)
 
 
 if __name__ == '__main__':
