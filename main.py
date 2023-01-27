@@ -1,6 +1,7 @@
 import requests
 from bs4 import BeautifulSoup
 from video import Film, TvShow
+from book import Book
 
 
 def get_imdb_soup(media):
@@ -21,6 +22,7 @@ def get_imdb_soup(media):
     print(f'Getting film : {media_title} - {media_year}')
 
     url = f'https://www.imdb.com/title/{media_id}/'
+    print(f'IMDB URL = {url}')
     response = requests.get(url, headers=HEADERS)
     soup = BeautifulSoup(response.text, 'html.parser')
 
@@ -33,9 +35,8 @@ def get_goodreads_soup(media):
     soup = BeautifulSoup(response.text, 'html.parser')
     list_item = soup.find('table', {"class": "tableList"}).find_all('tr')[0].find_all('a')[0]
     url = list_item.get('href')
-    print(url)
-    book_url = \
-        "https://www.goodreads.com/book/show/4671.The_Great_Gatsby?from_search=true&from_srp=true&qid=QuLZvdfJaA&rank=1"
+    book_url = "https://www.goodreads.com" + url
+    print(f"Goodreads URL = {book_url}")
     book_response = requests.get(book_url)
     book_soup = BeautifulSoup(book_response.text, 'html.parser')
     return book_soup
@@ -62,7 +63,9 @@ def main():
 
     elif media_type == 'Book':
         book = input('What book? ')
-        get_goodreads_soup(book)
+        soup = get_goodreads_soup(book)
+        book = Book(soup)
+        print(f'{book.title} \n {book.rating} \n {book.pages} \n {book.genres} \n {book.summary} \n {book.author} \n {book.published_date}')
 
 
 if __name__ == '__main__':
