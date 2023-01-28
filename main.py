@@ -5,27 +5,29 @@ from book import Book
 
 
 def get_imdb_soup(media):
-    HEADERS = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0"
-    }
-
     imdb_api_url = f'https://v2.sg.media-imdb.com/suggestion/h/{media}.json'
     imdb_response = requests.get(imdb_api_url)
     imdb_response.raise_for_status()
-    if imdb_response.status_code != 204:
-        json_response = imdb_response.json()
-
-    media_id = json_response['d'][0]['id']
-    media_title = json_response['d'][0]['l']
-    media_year = json_response['d'][0]['y']
-
-    print(f'Getting film : {media_title} - {media_year}')
-
+    json_response = imdb_response.json()
+    media_list = json_response['d']
+    if len(media_list) == 0:
+        print('Film or TV show not found')
+        exit(0)
+    # Just retrieve the first item in the list
+    media_item = media_list[0]
+    try:
+        media_id = media_item['id']
+        title = media_item['l']
+        year = media_item['y']
+    except KeyError:
+        print("Unable to narrow results, can you be more specific?")
+        exit(0)
+    print(f'Getting film : {title} - {year}')
     url = f'https://www.imdb.com/title/{media_id}/'
     print(f'IMDB URL = {url}')
-    response = requests.get(url, headers=HEADERS)
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0"}
+    response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.text, 'html.parser')
-
     return soup
 
 
@@ -33,7 +35,11 @@ def get_goodreads_soup(media):
     url = f"https://www.goodreads.com/search?q={media}"
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
-    list_item = soup.find('table', {"class": "tableList"}).find_all('tr')[0].find_all('a')[0]
+    try:
+        list_item = soup.find('table', {"class": "tableList"}).find_all('tr')[0].find_all('a')[0]
+    except AttributeError:
+        print('Error finding book')
+        exit(0)
     url = list_item.get('href')
     book_url = "https://www.goodreads.com" + url
     print(f"Goodreads URL = {book_url}")
