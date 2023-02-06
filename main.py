@@ -49,29 +49,38 @@ def get_goodreads_soup(media):
 
 
 def main():
-    media_type_list = ['Film', 'TV', 'Book']
-    media_type = input(f'Input one of: {media_type_list} : ')
-    if media_type not in media_type_list:
-        print('Inputted media type not in media list')
-        exit(0)
+    media_type_list = ['film', 'tv', 'book']
+    is_app_continuing = True
+    while is_app_continuing:
+        media_type = input(f'Input one of: {media_type_list} : ').lower()
+        if media_type not in media_type_list:
+            print('Inputted media type not in media list')
+            exit_program = input('Exit program? y to confirm ')
+            if exit_program == 'y':
+                is_app_continuing = False
+            continue
 
-    if media_type == 'Film':
-        film = input('What film? ')
-        soup = get_imdb_soup(film)
-        imdb_film = Film(soup)
-        print(f'{imdb_film.title} \n {imdb_film.rating} \n {imdb_film.summary} \n {imdb_film.genre_list} \n {imdb_film.runtime} \n {imdb_film.release_date}')
+        if media_type == 'film':
+            film = input('What film? ')
+            soup = get_imdb_soup(film)
+            imdb_film = Film(soup)
+            print(f'{imdb_film.title} \n{imdb_film.rating} \n{imdb_film.summary} \n{imdb_film.genre_list} \n{imdb_film.runtime} \n{imdb_film.release_date}')
 
-    elif media_type == 'TV':
-        tv = input('What TV show? ')
-        soup = get_imdb_soup(tv)
-        imdb_tv = TvShow(soup)
-        print(f'{imdb_tv.title} \n {imdb_tv.rating} \n {imdb_tv.summary} \n {imdb_tv.season_number} \n {imdb_tv.episode_number}')
+        elif media_type == 'tv':
+            tv = input('What TV show? ')
+            soup = get_imdb_soup(tv)
+            imdb_tv = TvShow(soup)
+            print(f'{imdb_tv.title} \n{imdb_tv.rating} \n{imdb_tv.summary} \n{imdb_tv.season_number} \n{imdb_tv.episode_number}')
 
-    elif media_type == 'Book':
-        book = input('What book? ')
-        soup = get_goodreads_soup(book)
-        book = Book(soup)
-        print(f'{book.title} \n {book.rating} \n {book.pages} \n {book.genres} \n {book.summary} \n {book.author} \n {book.published_date}')
+        elif media_type == 'book':
+            book = input('What book? ')
+            soup = get_goodreads_soup(book)
+            book = Book(soup)
+            print(f'{book.title} \n {book.rating} \n{book.pages} \n{book.genres} \n{book.summary} \n{book.author} \n{book.published_date}')
+
+        another_input = input('Would you like to input again? y or n ')
+        if another_input != 'y':
+            is_app_continuing = False
 
 
 if __name__ == '__main__':
