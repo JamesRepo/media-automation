@@ -31,6 +31,19 @@ def get_imdb_soup(media):
     return soup
 
 
+def get_rotten_tomatoes_soup(media):
+    url = f"https://www.rottentomatoes.com/search?search={media}"
+    headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0"}
+    response = requests.get(url, headers=headers)
+    soup = BeautifulSoup(response.text, "html.parser")
+    list_item = soup.find("search-page-result", {"type": "movie"}).find("ul").find_all("search-page-media-row")[0].find_all("a")[1]
+    media_url = list_item.get("href")
+    print(f"Rotten Tomatoes Link = " + media_url)
+    media_response = requests.get(media_url)
+    rt_soup = BeautifulSoup(media_response.text, "html.parser")
+    return rt_soup
+
+
 def get_goodreads_soup(media):
     url = f"https://www.goodreads.com/search?q={media}"
     response = requests.get(url)
@@ -49,6 +62,7 @@ def get_goodreads_soup(media):
 
 
 def main():
+    get_rotten_tomatoes_soup("nope")
     media_type_list = ['film', 'tv', 'book']
     is_app_continuing = True
     while is_app_continuing:
