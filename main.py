@@ -4,15 +4,14 @@ from video import Film, TvShow
 from book import Book
 
 
-def get_imdb_soup(media):
+def get_imdb_id(media):
     imdb_api_url = f'https://v2.sg.media-imdb.com/suggestion/h/{media}.json'
     imdb_response = requests.get(imdb_api_url)
     imdb_response.raise_for_status()
     json_response = imdb_response.json()
     media_list = json_response['d']
     if len(media_list) == 0:
-        print('Film or TV show not found')
-        exit(0)
+        raise ValueError('Film or TV show not found')
     # Just retrieve the first item in the list
     media_item = media_list[0]
     try:
@@ -20,10 +19,12 @@ def get_imdb_soup(media):
         title = media_item['l']
         year = media_item['y']
     except KeyError:
-        print("Unable to narrow results, can you be more specific?")
-        exit(0)
-    print(f'Getting film : {title} - {year}')
-    url = f'https://www.imdb.com/title/{media_id}/'
+        raise ValueError("Unable to narrow results, can you be more specific?")
+    return media_id, title, year
+
+
+def get_imdb_soup(media_id):
+    url = f'https://www.imdb.com/title/{media_id[0]}/'
     print(f'IMDB URL = {url}')
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0"}
     response = requests.get(url, headers=headers)
@@ -31,7 +32,7 @@ def get_imdb_soup(media):
     return soup
 
 
-def get_rotten_tomatoes_soup(media):
+def get_rotten_tomatoes_url(media):
     url = f"https://www.rottentomatoes.com/search?search={media}"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0"}
     response = requests.get(url, headers=headers)
@@ -39,30 +40,34 @@ def get_rotten_tomatoes_soup(media):
     list_item = soup.find("search-page-result", {"type": "movie"}).find("ul").find_all("search-page-media-row")[0].find_all("a")[1]
     media_url = list_item.get("href")
     print(f"Rotten Tomatoes Link = " + media_url)
+    return media_url
+
+
+def get_rotten_tomatoes_soup(media_url):
     media_response = requests.get(media_url)
     rt_soup = BeautifulSoup(media_response.text, "html.parser")
     return rt_soup
 
 
-def get_goodreads_soup(media):
+def get_goodreads_url(media):
     url = f"https://www.goodreads.com/search?q={media}"
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
-    try:
-        list_item = soup.find('table', {"class": "tableList"}).find_all('tr')[0].find_all('a')[0]
-    except AttributeError:
-        print('Error finding book')
-        exit(0)
+    list_item = soup.find('table', {"class": "tableList"}).find_all('tr')[0].find_all('a')[0]
     url = list_item.get('href')
     book_url = "https://www.goodreads.com" + url
     print(f"Goodreads URL = {book_url}")
+    return book_url
+
+
+def get_goodreads_soup(book_url):
     book_response = requests.get(book_url)
     book_soup = BeautifulSoup(book_response.text, 'html.parser')
+
     return book_soup
 
 
 def main():
-    get_rotten_tomatoes_soup("nope")
     media_type_list = ['film', 'tv', 'book']
     is_app_continuing = True
     while is_app_continuing:
@@ -76,21 +81,23 @@ def main():
 
         if media_type == 'film':
             film = input('What film? ')
-            soup = get_imdb_soup(film)
-            imdb_film = Film(soup)
-            print(f'{imdb_film.title} \n{imdb_film.rating} \n{imdb_film.summary} \n{imdb_film.genre_list} \n{imdb_film.runtime} \n{imdb_film.release_date}')
+            imdb_soup = get_imdb_soup(get_imdb_id(film))
+            rt_soup = get_rotten_tomatoes_soup(get_rotten_tomatoes_url(film))
+            film = Film(imdb_soup, rt_soup)
+            print(f'{film.title} \n{film.imdb_rating} \n{film.rt_rating} \n{film.summary} \n{film.genre_list} \n{film.runtime} \n{film.release_date}')
 
         elif media_type == 'tv':
             tv = input('What TV show? ')
-            soup = get_imdb_soup(tv)
-            imdb_tv = TvShow(soup)
-            print(f'{imdb_tv.title} \n{imdb_tv.rating} \n{imdb_tv.summary} \n{imdb_tv.season_number} \n{imdb_tv.episode_number}')
+            imdb_soup = get_imdb_soup(get_imdb_id(tv))
+            rt_soup = get_rotten_tomatoes_soup(get_rotten_tomatoes_url(tv))
+            tv_show = TvShow(imdb_soup, rt_soup)
+            print(f'{tv_show.title} \n{tv_show.imdb_rating} \n{tv_show.rt_rating} \n{tv_show.summary} \n{tv_show.season_number} \n{tv_show.episode_number}')
 
         elif media_type == 'book':
             book = input('What book? ')
-            soup = get_goodreads_soup(book)
-            book = Book(soup)
-            print(f'{book.title} \n {book.rating} \n{book.pages} \n{book.genres} \n{book.summary} \n{book.author} \n{book.published_date}')
+            imdb_soup = get_goodreads_soup(get_goodreads_url(book))
+            book = Book(imdb_soup)
+            print(f'{book.metadata.title} \n {book.rating} \n{book.metadata.pages} \n{book.metadata.genres} \n{book.summary} \n{book.metadata.author} \n{book.metadata.published_date}')
 
         another_input = input('Would you like to input again? y or n ')
         if another_input != 'y':
