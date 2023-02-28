@@ -6,6 +6,7 @@ class Video:
         self.imdb_rating = self._get_imdb_rating(imdb_soup)
         self.rt_rating = self._get_rt_rating(rt_soup)
         self.summary = self._get_summary(imdb_soup)
+        self.where_to_watch = self._get_where_to_watch(rt_soup)
 
     def _get_title(self, soup):
         return soup.find('h1').text.strip()
@@ -22,6 +23,15 @@ class Video:
 
     def _get_summary(self, soup):
         return soup.find('div', attrs={'data-testid': 'plot'}).find('span').text
+
+    def _get_where_to_watch(self, soup):
+        where_to_watch_bubbles = soup.find_all('where-to-watch-meta')
+        platform_map = {}
+        for bubble in where_to_watch_bubbles:
+            platform = bubble['affiliate']
+            platform_license = bubble.find('span', attrs={'slot': 'license'}).text
+            platform_map.update({platform: platform_license})
+        return platform_map
 
 
 class Film(Video):

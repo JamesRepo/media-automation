@@ -32,12 +32,18 @@ def get_imdb_soup(media_id):
     return soup
 
 
-def get_rotten_tomatoes_url(media):
+def get_rotten_tomatoes_url(media, media_type):
     url = f"https://www.rottentomatoes.com/search?search={media}"
     headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:98.0) Gecko/20100101 Firefox/98.0"}
     response = requests.get(url, headers=headers)
     soup = BeautifulSoup(response.text, "html.parser")
-    list_item = soup.find("search-page-result", {"type": "movie"}).find("ul").find_all("search-page-media-row")[0].find_all("a")[1]
+    if media_type == 'film':
+        type_string = 'movie'
+    elif media_type == 'tv':
+        type_string = 'tvSeries'
+    else:
+        return None
+    list_item = soup.find("search-page-result", {"type": type_string}).find("ul").find_all("search-page-media-row")[0].find_all("a")[1]
     media_url = list_item.get("href")
     print(f"Rotten Tomatoes Link = " + media_url)
     return media_url
@@ -82,16 +88,16 @@ def main():
         if media_type == 'film':
             film = input('What film? ')
             imdb_soup = get_imdb_soup(get_imdb_id(film))
-            rt_soup = get_rotten_tomatoes_soup(get_rotten_tomatoes_url(film))
+            rt_soup = get_rotten_tomatoes_soup(get_rotten_tomatoes_url(film, 'film'))
             film = Film(imdb_soup, rt_soup)
-            print(f'{film.title} \n{film.imdb_rating} \n{film.rt_rating} \n{film.summary} \n{film.genre_list} \n{film.runtime} \n{film.release_date}')
+            print(f'{film.title} \n{film.imdb_rating} \n{film.rt_rating} \n{film.summary} \n{film.genre_list} \n{film.runtime} \n{film.release_date} \n{film.where_to_watch}')
 
         elif media_type == 'tv':
             tv = input('What TV show? ')
             imdb_soup = get_imdb_soup(get_imdb_id(tv))
-            rt_soup = get_rotten_tomatoes_soup(get_rotten_tomatoes_url(tv))
+            rt_soup = get_rotten_tomatoes_soup(get_rotten_tomatoes_url(tv, 'tv'))
             tv_show = TvShow(imdb_soup, rt_soup)
-            print(f'{tv_show.title} \n{tv_show.imdb_rating} \n{tv_show.rt_rating} \n{tv_show.summary} \n{tv_show.season_number} \n{tv_show.episode_number}')
+            print(f'{tv_show.title} \n{tv_show.imdb_rating} \n{tv_show.rt_rating} \n{tv_show.summary} \n{tv_show.season_number} \n{tv_show.episode_number} \n{tv_show.where_to_watch}')
 
         elif media_type == 'book':
             book = input('What book? ')
