@@ -4,7 +4,6 @@ class Video:
     def __init__(self, imdb_soup, rt_soup):
         self.title = self._get_title(imdb_soup)
         self.imdb_rating = self._get_imdb_rating(imdb_soup)
-        self.rt_rating = self._get_rt_rating(rt_soup)
         self.summary = self._get_summary(imdb_soup)
         self.where_to_watch = self._get_where_to_watch(rt_soup)
 
@@ -13,13 +12,6 @@ class Video:
 
     def _get_imdb_rating(self, soup):
         return soup.find('div', attrs={'data-testid': 'hero-rating-bar__aggregate-rating__score'}).find('span').text
-
-    def _get_rt_rating(self, soup):
-        tomato_meter = \
-            soup.find('div', attrs={'class': 'thumbnail-scoreboard-wrap'}).find('score-board')['tomatometerscore']
-        audience_score = \
-            soup.find('div', attrs={'class': 'thumbnail-scoreboard-wrap'}).find('score-board')['audiencescore']
-        return f'tomato: {tomato_meter} / audience: {audience_score}'
 
     def _get_summary(self, soup):
         return soup.find('span', attrs={'data-testid': 'plot-l'}).text
@@ -41,6 +33,7 @@ class Film(Video):
         self.release_date = self._get_release_date(imdb_soup)
         self.genre_list = self._get_genre_list(imdb_soup)
         self.runtime = self._get_runtime(imdb_soup)
+        self.rt_rating = self._get_film_rt_rating(rt_soup)
 
     def _get_release_date(self, soup):
         return soup.find('li', attrs={'data-testid': 'title-details-releasedate'}).find('div').find('a').text
@@ -52,6 +45,13 @@ class Film(Video):
     def _get_runtime(self, soup):
         return soup.find('ul', attrs={'data-testid': 'hero-title-block__metadata'}).find_all('li')[2].text
 
+    def _get_film_rt_rating(self, soup):
+        tomato_meter = \
+            soup.find('div', attrs={'class': 'thumbnail-scoreboard-wrap'}).find('score-board')['tomatometerscore']
+        audience_score = \
+            soup.find('div', attrs={'class': 'thumbnail-scoreboard-wrap'}).find('score-board')['audiencescore']
+        return f'tomato: {tomato_meter} / audience: {audience_score}'
+
 
 class TvShow(Video):
 
@@ -59,6 +59,7 @@ class TvShow(Video):
         super().__init__(imdb_soup, rt_soup)
         self.season_number = self._get_season_number(imdb_soup)
         self.episode_number = self._get_episode_number(imdb_soup)
+        self.rt_rating = self._get_tv_rt_rating(rt_soup)
 
     def _get_season_number(self, soup):
         return soup.\
@@ -67,4 +68,9 @@ class TvShow(Video):
 
     def _get_episode_number(self, soup):
         return soup.find('div', attrs={'data-testid': 'episodes-header'}).find('h3').find_all('span')[1].text
+
+    def _get_tv_rt_rating(self, soup):
+        tomato_meter = soup.find('span', attrs={'data-qa': 'tomatometer'}).text.strip()
+        audience_score = soup.find('span', attrs={'data-qa': 'audience-score'}).text.strip()
+        return f'tomato: {tomato_meter} / audience: {audience_score}'
 
