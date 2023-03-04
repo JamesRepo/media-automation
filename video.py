@@ -22,7 +22,7 @@ class Video:
         return f'tomato: {tomato_meter} / audience: {audience_score}'
 
     def _get_summary(self, soup):
-        return soup.find('div', attrs={'data-testid': 'plot'}).find('span').text
+        return soup.find('span', attrs={'data-testid': 'plot-l'}).text
 
     def _get_where_to_watch(self, soup):
         where_to_watch_bubbles = soup.find_all('where-to-watch-meta')
