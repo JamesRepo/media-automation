@@ -62,15 +62,22 @@ class TvShow(Video):
         self.rt_rating = self._get_tv_rt_rating(rt_soup)
 
     def _get_season_number(self, soup):
-        return soup.\
-            find('div', attrs={'data-testid': 'episodes-browse-episodes'}).\
-            find('label', attrs={'for': 'browse-episodes-season'}).text
+        episode_meta_data = soup.find('div', attrs={'data-testid': 'episodes-browse-episodes'})
+        try:
+            season_number = episode_meta_data.find('label', attrs={'for': 'browse-episodes-season'}).text
+        except AttributeError:
+            season_number = '1'
+        return season_number
 
     def _get_episode_number(self, soup):
         return soup.find('div', attrs={'data-testid': 'episodes-header'}).find('h3').find_all('span')[1].text
 
     def _get_tv_rt_rating(self, soup):
-        tomato_meter = soup.find('span', attrs={'data-qa': 'tomatometer'}).text.strip()
-        audience_score = soup.find('span', attrs={'data-qa': 'audience-score'}).text.strip()
+        try:
+            tomato_meter = soup.find('span', attrs={'data-qa': 'tomatometer'}).text.strip()
+            audience_score = soup.find('span', attrs={'data-qa': 'audience-score'}).text.strip()
+        except AttributeError:
+            tomato_meter = 'N/A'
+            audience_score = 'N/A'
         return f'tomato: {tomato_meter} / audience: {audience_score}'
 
